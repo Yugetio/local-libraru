@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html ng-app="authorsListApp">
+<head>
+	<meta charset="UTF-8">
+	<title>Library</title>
+
+  <script src="bootstrap/js/jquery-3.2.1.min.js"></script>
+	<script src="bootstrap/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" href="css/style.css">
+
+	<script src="script/angular.js"></script>
+	<script src="script/angular-locale_uk-ua.js"></script>
+
+	<script src="script/model.js"></script>
+	<script src="script/script.js"></script>
+</head>
+<body ng-controller="authorsListCtrl" ng-switch on="view">
+	<div class="container">
+		<div class="page-header">
+				<h1>Ласкаво просимо до локальної бібліотеки!!!</h1> 
+				<h3>Кількість записів в бібліотеці - {{newData.length}}</h3>
+		</div>
+
+		<div class="container" style="margin-top:10px;">
+      <div class="btn-group nav">
+        <button class="btn btn-default" ng-click="showBlock(0)">Таблиця з книгами</button>
+        <button class="btn btn-default" ng-click="showBlock(1)">Додати запис в бібліотеку</button>
+        <!-- <button class="btn btn-danger" onclick="localStorage.clear()">localStorge.clear()</button> -->
+      </div>
+
+		<div ng-switch-when="0">
+			<div class="input-group">
+				<input type="text" class="form-control" id="inputSearch" ng-keypress="GoSearch($event)">
+  			<span class="input-group-btn">
+  			  <button class="btn btn-default" type="button" ng-click="btnSearch()">Знайти</button>
+  			  <button class="btn btn-default" type="button" ng-click="btnCancSearch()" ng-if="ncs" ng-cloak>Відмінити</button>
+  			</span>
+  		</div>
+  
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>Автор</th>
+					<th>Дата народження автора</th>
+					<th>Книга</th>
+					<th>Жанр</th>
+					<th>Кількість сторінок</th>
+					<td>&nbsp;</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="authors in newData">
+					<td>{{authors.name}}</td>
+					<td>{{forDate(authors.date) | date : "fullDate"}}</td>
+					<td>{{authors.books}}</td>
+					<td>{{authors.style}}</td>
+					<td>{{authors.pages}}</td>
+					<td>
+						<div class="btn-group" style="width: 70px">
+  						<button type="button" class="btn btn-primary">Дії</button>
+  						<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    						<span class="caret"></span>
+    						<span class="sr-only">Toggle Dropdown</span>
+  						</button>
+  						<ul class="dropdown-menu">
+    						<li><a ng-click="deleteAuthor($index)" href="#">Видалити</a></li>
+    						<li><a ng-click="editThisAuthor($index)" href="#">Редагувати</a></li>
+ 							</ul>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+		</div>
+	
+		<form name="myForm" novalidate ng-switch-when="1" ng-cloak>
+      <div class="form-group">
+          <label for="fio">ПІБ автора</label>
+          <input name="authorName" type="text" class="form-control"  ng-model="author.authorName" id="fio" placeholder="Введіть ПІБ автора" required ng-pattern="/[а-яА-ЯґєҐЄІіЇїA-Za-z]+ [а-яА-ЯґєҐЄІіЇїA-Za-z]+ [а-яА-ЯґєҐЄІіЇїA-Za-z]+/">
+					<div class="error" ng-show="myForm.authorName.$invalid && myForm.authorName.$dirty">
+				    <span ng-show="myForm.authorName.$error.pattern">Введіть ПІБ в форматі "Іванов Іван Іванович"</span>
+				    <span ng-show="myForm.authorName.$error.required">Поле не повинно бути порожнім</span>
+				  </div>
+			</div>
+
+      <div class="form-group">
+        <label for="date">Дата народження автора</label>
+        <input name="authorDate" type="date" class="form-control" ng-model="author.authorDate" id="date" placeholder="Введіть дату" required>
+      </div>
+
+      <div class="form-group">
+        <label for="nameBooks">Назва	книги</label>
+        <input name="authorBooks" type="text" class="form-control" ng-model="author.authorBooks" id="nameBooks" placeholder="Назва книги" required>
+				<div class="error" ng-show="myForm.authorBooks.$invalid && myForm.authorBooks.$dirty">
+				  <span ng-show="myForm.authorBooks.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+      <div class="form-group">
+        <label for="ganr">Жанр</label>
+        <input name="authorStyle" type="text" class="form-control" ng-model="author.authorStyle" id="ganr" placeholder="Жанр книги" required>
+       	<div class="error" ng-show="myForm.authorStyle.$invalid && myForm.authorStyle.$dirty">
+					<span ng-show="myForm.authorStyle.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+      <div class="form-group">
+        <label for="str">Кількість сторінок</label>
+        <input name="authorPages" type="text" class="form-control" ng-model="author.authorPages" id="str" placeholder="Кількість сторінок" required ng-pattern="/\d+/" ng-keypress="blockIn($event)">
+        <div class="error" ng-show="myForm.authorPages.$invalid && myForm.authorPages.$dirty">
+					<span ng-show="myForm.authorPages.$error.pattern">Введіть кількість сторінок "452"</span>
+					<span ng-show="myForm.authorPages.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+        <button type="submit" ng-disabled="myForm.$invalid"  ng-click="addNewAuthor(author)" class="btn btn-default">Добавить</button>
+    </form>
+	</div>
+
+	<div id="div1" ng-if="editFormShow" ng-cloak>
+		<form name="myForm3" id="div2" novalidate>
+			<div class="form-group">
+				<label for="fio3">ПІБ автора</label>
+				<input name="authorName3" type="text" class="form-control"  ng-model="author3.editName" id="fio3" required ng-pattern="/[а-яА-ЯґєҐЄІіЇїA-Za-z]+ [а-яА-ЯґєҐЄІіЇїA-Za-z]+ [а-яА-ЯґєҐЄІіЇїA-Za-z]+/">
+				<div class="error" ng-show="myForm3.authorName3.$invalid && myForm3.authorName3.$dirty">
+					<span ng-show="myForm3.authorName3.$error.pattern">Введіть ПІБ в форматі "Іванов Іван Іванович"</span>
+					<span ng-show="myForm3.authorName3.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="date3">Дата народження автора</label>
+				<input name="authorDate3" type="date" class="form-control" ng-model="author3.editDate" id="date3" required>
+			</div>
+
+			<div class="form-group">
+				<label for="nameBooks3">Назва книги</label>
+				<input name="authorBooks3" type="text" class="form-control" ng-model="author3.editBooks" id="nameBooks3" required>
+				<div class="error" ng-show="myForm3.authorBooks3.$invalid && myForm3.authorBooks3.$dirty">
+					<span ng-show="myForm3.authorBooks3.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="ganr3">Жанр</label>
+				<input name="authorStyle3" type="text" class="form-control" ng-model="author3.editStyle" id="ganr3" required>
+				<div class="error" ng-show="myForm3.authorStyle3.$invalid && myForm3.authorStyle3.$dirty">
+					<span ng-show="myForm3.authorStyle3.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="str3">Кількість сторінок</label>
+				<input name="authorPages3" type="text" class="form-control" ng-model="author3.editPages" id="str3" required ng-pattern="/\d+/" ng-keypress="blockIn($event)">
+				<div class="error" ng-show="myForm3.authorPages3.$invalid && myForm3.authorPages3.$dirty">
+					<span ng-show="myForm3.authorPages3.$error.pattern">Введіть кількість сторінок "452"</span>
+					<span ng-show="myForm3.authorPages3.$error.required">Поле не повинно бути порожнім</span>
+				</div>
+			</div>
+
+			<button type="submit" ng-disabled="myForm3.$invalid"  ng-click="editAuthor(author3)" class="btn btn-default">Зберегти</button>
+			<button  ng-click="cancel()" class="btn btn-default">Відмінити</button>
+		</form>
+	</div>
+</body>
+</html>
